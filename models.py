@@ -1,4 +1,5 @@
 import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
 
 def init_db():
     conn = sqlite3.connect('database.db')
