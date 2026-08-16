@@ -11,6 +11,9 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+# Initialize the database on startup
+init_db()
+
 @app.route('/')
 def index():
     if 'user_id' in session:
