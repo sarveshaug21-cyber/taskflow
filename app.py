@@ -61,5 +61,65 @@ def signup():
         return redirect(url_for('login'))
     return render_template('signup.html')
 
+# API endpoints
+@app.route('/api/tasks', methods=['POST'])
+def create_task():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json()
+    title = data.get('title')
+    description = data.get('description')
+    status = data.get('status')
+    due_date = data.get('due_date')
+    if not title or not description or not status or not due_date:
+        return jsonify({'error': 'Missing required fields'}), 400
+    conn = get_db_connection()
+    conn.execute('INSERT INTO tasks (title, description, status, due_date, user_id) VALUES (?, ?, ?, ?, ?)', (title, description, status, due_date, session['user_id']))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Task created successfully'}), 201
+
+@app.route('/api/tasks', methods=['GET'])
+def get_tasks():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    conn = get_db_connection()
+    tasks = conn.execute('SELECT * FROM tasks WHERE user_id = ?', (session['user_id'],)).fetchall()
+    conn.close()
+    return jsonify([dict(task) for task in tasks]), 200
+
+@app.route('/api/tasks/<int:id>', methods=['PUT'])
+def update_task(id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json()
+    title = data.get('title')
+    description = data.get('description')
+    status = data.get('status')
+    due_date = data.get('due_date')
+    if not title or not description or not status or not due_date:
+        return jsonify({'error': 'Missing required fields'}), 400
+    conn = get_db_connection()
+    task = conn.execute('SELECT * FROM tasks WHERE id = ? AND user_id = ?', (id, session['user_id'])).fetchone()
+    if not task:
+        return jsonify({'error': 'Task not found'}), 404
+    conn.execute('UPDATE tasks SET title = ?, description = ?, status = ?, due_date = ? WHERE id = ?', (title, description, status, due_date, id))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Task updated successfully'}), 200
+
+@app.route('/api/tasks/<int:id>', methods=['DELETE'])
+def delete_task(id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    conn = get_db_connection()
+    task = conn.execute('SELECT * FROM tasks WHERE id = ? AND user_id = ?', (id, session['user_id'])).fetchone()
+    if not task:
+        return jsonify({'error': 'Task not found'}), 404
+    conn.execute('DELETE FROM tasks WHERE id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Task deleted successfully'}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
