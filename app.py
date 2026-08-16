@@ -29,14 +29,8 @@ def login():
             session['user_id'] = user['id']
             return redirect(url_for('dashboard'))
         else:
-            return 'Invalid username or password', 401
-    return '''
-        <form method="post">
-            Username: <input type="text" name="username"><br>
-            Password: <input type="password" name="password"><br>
-            <input type="submit" value="Login">
-        </form>
-    '''
+            return render_template('login.html', error='Invalid username or password')
+    return render_template('login.html')
 
 @app.route('/logout')
 def logout():
@@ -51,6 +45,21 @@ def dashboard():
     tasks = conn.execute('SELECT * FROM tasks WHERE user_id = ?', (session['user_id'],)).fetchall()
     conn.close()
     return render_template('dashboard.html', tasks=tasks)
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        conn = get_db_connection()
+        if conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone() is not None:
+            return render_template('signup.html', error='Username already exists')
+        password_hash = generate_password_hash(password)
+        conn.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', (username, password_hash))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('login'))
+    return render_template('signup.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
