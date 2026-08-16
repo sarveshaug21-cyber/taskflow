@@ -13,7 +13,11 @@
         <textarea id="task-description" placeholder="Task Description"></textarea>
         <button type="submit">Add Task</button>
     </form>
-    <ul id="tasks-list"></ul>
+    <ul id="tasks-list">
+        {% for task in tasks %}
+            <li>{{ task.title }} - {{ task.description }} - {{ task.status }} - {{ task.due_date }}</li>
+        {% endfor %}
+    </ul>
 
     <script src="/static/script.js"></script>
 </body>

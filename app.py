@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session, redirect, url_for
+from flask import Flask, request, jsonify, session, redirect, url_for, render_template
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 
@@ -50,15 +50,7 @@ def dashboard():
     conn = get_db_connection()
     tasks = conn.execute('SELECT * FROM tasks WHERE user_id = ?', (session['user_id'],)).fetchall()
     conn.close()
-    return '''
-        <h1>Dashboard</h1>
-        <ul>
-            {% for task in tasks %}
-                <li>{{ task.title }} - {{ task.description }} - {{ task.status }} - {{ task.due_date }}</li>
-            {% endfor %}
-        </ul>
-        <a href="/logout">Logout</a>
-    '''
+    return render_template('dashboard.html', tasks=tasks)
 
 if __name__ == '__main__':
     app.run(debug=True)
