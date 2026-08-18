@@ -1,98 +1,107 @@
-document.addEventListener('DOMContentLoaded', () => {
+const taskForm = document.getElementById('add-task-form');
+const taskTitleInput = document.getElementById('task-title');
+const taskDescriptionInput = document.getElementById('task-description');
+const taskDueDateInput = document.getElementById('task-due-date');
+const tasksList = document.getElementById('tasks-list');
+
+function renderTasks(tasks) {
+    tasksList.innerHTML = '';
+
+    if (!tasks || tasks.length === 0) {
+        tasksList.innerHTML = '<li class="empty-state">No tasks yet — add one above to get started.</li>';
+        return;
+    }
+
+    tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.className = 'task-item' + (task.status === 'completed' ? ' completed' : '');
+        li.innerHTML = `
+            <div class="task-content">
+                <p class="task-title">${escapeHtml(task.title)}</p>
+                ${task.description ? `<p class="task-description">${escapeHtml(task.description)}</p>` : ''}
+                ${task.due_date ? `<span class="task-due">Due ${escapeHtml(task.due_date)}</span>` : ''}
+            </div>
+            <div class="task-actions">
+                ${task.status !== 'completed' ? `<button class="btn-complete" data-id="${task.id}">Complete</button>` : ''}
+                <button class="btn-delete" data-id="${task.id}">Delete</button>
+            </div>
+        `;
+        tasksList.appendChild(li);
+    });
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function fetchTasks() {
     fetch('/api/tasks')
         .then(response => response.json())
-        .then(tasks => {
-            const tasksList = document.getElementById('tasks-list');
-            tasks.forEach(task => {
-                const li = document.createElement('li');
-                li.textContent = task.title;
-                li.innerHTML += ` - ${task.description} - Due: ${task.due_date}`;
-                
-                const completeButton = document.createElement('button');
-                completeButton.textContent = 'Complete';
-                completeButton.addEventListener('click', () => markTaskComplete(task.id));
-                li.appendChild(completeButton);
-                
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.addEventListener('click', () => deleteTask(task.id));
-                li.appendChild(deleteButton);
-                
-                tasksList.appendChild(li);
-            });
-        })
-        .catch(error => console.error('Error fetching tasks:', error));
+        .then(tasks => renderTasks(tasks))
+        .catch(error => {
+            console.error('Error fetching tasks:', error);
+            tasksList.innerHTML = '<li class="empty-state">Could not load tasks.</li>';
+        });
+}
 
-    document.getElementById('add-task-form').addEventListener('submit', addTask);
-});
-
-function addTask(event) {
+taskForm.addEventListener('submit', event => {
     event.preventDefault();
-    const title = document.getElementById('task-title').value;
-    const description = document.getElementById('task-description').value;
+
+    const title = taskTitleInput.value.trim();
+    if (!title) return;
 
     fetch('/api/tasks', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ title, description })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            title: title,
+            description: taskDescriptionInput.value.trim(),
+            status: 'pending',
+            due_date: taskDueDateInput.value || null
+        })
     })
-    .then(response => response.json())
-    .then(task => {
-        const tasksList = document.getElementById('tasks-list');
-        const li = document.createElement('li');
-        li.textContent = task.title;
-        li.innerHTML += ` - ${task.description} - Due: ${task.due_date}`;
-        
-        const completeButton = document.createElement('button');
-        completeButton.textContent = 'Complete';
-        completeButton.addEventListener('click', () => markTaskComplete(task.id));
-        li.appendChild(completeButton);
-        
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', () => deleteTask(task.id));
-        li.appendChild(deleteButton);
-        
-        tasksList.appendChild(li);
-    })
-    .catch(error => console.error('Error adding task:', error));
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to add task');
+            return response.json();
+        })
+        .then(() => {
+            taskForm.reset();
+            fetchTasks();
+        })
+        .catch(error => {
+            alert('Error adding task: ' + error.message);
+        });
+});
 
-    document.getElementById('task-title').value = '';
-    document.getElementById('task-description').value = '';
-}
+tasksList.addEventListener('click', event => {
+    const id = event.target.dataset.id;
+    if (!id) return;
 
-function markTaskComplete(taskId) {
-    fetch(`/api/tasks/${taskId}/complete`, {
-        method: 'PUT'
-    })
-    .then(response => response.json())
-    .then(updatedTask => {
-        const tasksList = document.getElementById('tasks-list');
-        const li = tasksList.querySelector(`li[data-id="${updatedTask.id}"]`);
-        if (li) {
-            li.textContent = updatedTask.title;
-            li.innerHTML += ` - ${updatedTask.description} - Due: ${updatedTask.due_date}`;
-        }
-    })
-    .catch(error => console.error('Error marking task complete:', error));
-}
+    if (event.target.classList.contains('btn-complete')) {
+        fetch(`/api/tasks/${id}/complete`, { method: 'PUT' })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to mark task complete');
+                fetchTasks();
+            })
+            .catch(error => {
+                alert('Error marking task complete: ' + error.message);
+            });
+    }
 
-function deleteTask(taskId) {
-    fetch(`/api/tasks/${taskId}`, {
-        method: 'DELETE'
-    })
-    .then(response => {
-        if (response.ok) {
-            const tasksList = document.getElementById('tasks-list');
-            const li = tasksList.querySelector(`li[data-id="${taskId}"]`);
-            if (li) {
-                tasksList.removeChild(li);
-            }
-        } else {
-            console.error('Error deleting task:', response.statusText);
-        }
-    })
-    .catch(error => console.error('Error deleting task:', error));
-}
+    if (event.target.classList.contains('btn-delete')) {
+        fetch(`/api/tasks/${id}`, { method: 'DELETE' })
+            .then(response => {
+                if (!response.ok && response.status !== 204) {
+                    throw new Error('Failed to delete task');
+                }
+                fetchTasks();
+            })
+            .catch(error => {
+                alert('Error deleting task: ' + error.message);
+            });
+    }
+});
+
+fetchTasks();

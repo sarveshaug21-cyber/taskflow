@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <div class="dashboard-header">
+            <div>
+                <h1>Today's list</h1>
+                <p class="today" id="today-date"></p>
+            </div>
+            <a href="/logout" class="logout-link">Log out</a>
+        </div>
+
+        <div class="add-task-row">
+            <form id="add-task-form">
+                <div class="add-task-line">
+                    <input type="text" id="task-title" placeholder="Add a task…" required autocomplete="off">
+                    <input type="date" id="task-due-date">
+                    <select id="task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <textarea id="task-description" placeholder="Notes (optional)"></textarea>
+                <button type="submit">Add to list</button>
+            </form>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" id="search-input" class="search-input" placeholder="Search tasks…" autocomplete="off">
+            <div class="filter-chips">
+                <button class="chip active" data-filter="all">All</button>
+                <button class="chip" data-filter="active">Active</button>
+                <button class="chip" data-filter="completed">Completed</button>
+            </div>
+            <select id="sort-select" class="sort-select">
+                <option value="due_date">Sort: Due date</option>
+                <option value="priority">Sort: Priority</option>
+                <option value="newest">Sort: Newest</option>
+            </select>
+        </div>
+
+        <div id="tasks-container">
+            <!-- Populated by script.js -->
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

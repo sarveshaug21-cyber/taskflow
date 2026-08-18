@@ -3,15 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
+    <title>Sign Up — TaskFlow</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Sign Up</h1>
-    <form method="post">
-        Username: <input type="text" name="username"><br>
-        Password: <input type="password" name="password"><br>
-        <input type="submit" value="Sign Up">
-    </form>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <p class="wordmark">TaskFlow</p>
+            <h1>Start your list</h1>
+            <p class="subtitle">Nothing to configure. Just write it down.</p>
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="post">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autofocus>
+
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+
+                <input type="submit" value="Sign Up">
+            </form>
+
+            <p class="switch-link">Already have a list? <a href="/login">Log in</a></p>
+        </div>
+    </div>
 </body>
 </html>

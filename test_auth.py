@@ -13,7 +13,7 @@ def test_signup(client):
         password='testpassword'
     ), follow_redirects=True)
     assert response.status_code == 200
-    assert b'Welcome, testuser!' in response.data
+    assert b'Login' in response.data
 
 def test_login(client):
     response = client.post('/login', data=dict(
@@ -21,7 +21,7 @@ def test_login(client):
         password='testpassword'
     ), follow_redirects=True)
     assert response.status_code == 200
-    assert b'Welcome, testuser!' in response.data
+    assert b"Today's list" in response.data
 
 def test_logout(client):
     response = client.get('/logout')

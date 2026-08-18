@@ -7,17 +7,25 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Welcome to TaskFlow</h1>
-    <form id="add-task-form">
-        <input type="text" id="task-title" placeholder="Task Title" required>
-        <textarea id="task-description" placeholder="Task Description"></textarea>
-        <button type="submit">Add Task</button>
-    </form>
-    <ul id="tasks-list">
-        {% for task in tasks %}
-            <li>{{ task.title }} - {{ task.description }} - {{ task.status }} - {{ task.due_date }}</li>
-        {% endfor %}
-    </ul>
+    <div class="dashboard-wrapper">
+        <div class="dashboard-header">
+            <h1>Your Tasks</h1>
+            <a href="/logout" class="logout-link">Log out</a>
+        </div>
+
+        <div class="add-task-card">
+            <form id="add-task-form">
+                <input type="text" id="task-title" placeholder="Task title" required>
+                <textarea id="task-description" placeholder="Description (optional)" rows="2"></textarea>
+                <input type="date" id="task-due-date">
+                <button type="submit">Add Task</button>
+            </form>
+        </div>
+
+        <ul id="tasks-list">
+            <!-- Populated by script.js -->
+        </ul>
+    </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
