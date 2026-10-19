@@ -305,3 +305,36 @@ tasksContainer.addEventListener('click', event => {
 });
 
 fetchTasks();
+
+// ---------------- Keyboard shortcuts ----------------
+//
+// Shortcuts are ignored when the user is typing in an input, textarea,
+// select, or contentEditable element, and when any modifier key
+// (Ctrl, Alt, Meta, Shift) is held. This prevents conflicts with form
+// entry and browser/OS shortcuts.
+
+function isTypingTarget(el) {
+  if (!el) return false;
+  const tag = el.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (el.isContentEditable) return true;
+  return false;
+}
+
+window.addEventListener('keydown', (event) => {
+  if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+  if (isTypingTarget(document.activeElement)) return;
+
+  switch (event.key.toLowerCase()) {
+    case 'c':
+      event.preventDefault();
+      if (taskTitleInput) taskTitleInput.focus();
+      break;
+    case 't':
+      event.preventDefault();
+      if (taskDueDateInput) {
+        taskDueDateInput.value = todayISO();
+      }
+      break;
+  }
+});
